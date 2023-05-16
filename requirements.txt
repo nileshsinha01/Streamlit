@@ -1,3 +1,4 @@
+snowflake-python-connector
 streamlit
 pandas 
 numpy
