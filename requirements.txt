@@ -5,6 +5,3 @@ streamlit-aggrid
 streamlit
 pandas 
 numpy
-datetime
-openpyxl
-sqlalchemy
