@@ -1,6 +1,5 @@
 # Imports
 import snowflake.connector
-from snowflake.snowpark.session import Session
 import streamlit as st
 from snowflake.connector.pandas_tools import pd_writer
 import pandas as pd
