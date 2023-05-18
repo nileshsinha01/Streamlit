@@ -1,9 +1,18 @@
 # Imports
+import snowflake.connector
 from snowflake.snowpark.session import Session
 import streamlit as st
 from snowflake.connector.pandas_tools import pd_writer
 import pandas as pd
 import numpy as np
+
+## user credentials
+
+user="nileshsinha"
+password="Hummer$123",
+account_identifier="yhrcdps-ie79268"
+database_name="COVID19_EPIDEMIOLOGICAL_DATA"
+schema_name="PUBLIC"
 
 # Set Streamlit Page
 st.set_page_config(
@@ -17,29 +26,28 @@ st.set_page_config(
     }
 )
 
-
 # Functions
 
-# Create Session object
-def create_session_object():
-    connection_parameters = {
-        "account": "yhrcdps-ie79268",
-        "user": "NILESHSINHA",
-        "password": "Hummer$123",
-        "role": "ACCOUNTADMIN",
-        "warehouse": "COMPUTE_WH",
-        "database": "COVID19_EPIDEMIOLOGICAL_DATA",
-        "schema": "PUBLIC"
-    }
-    session = Session.builder.configs(connection_parameters).create()
-    print(session.sql('select current_warehouse(), current_database(), current_schema()').collect())
-    return session
-
-
 # Load Data from Snowflake
-def load_data(session, query):
-    snow_df = session.sql(query)
-    pd_df = snow_df.to_pandas()
+def load_data(query):
+    ctx = snowflake.connector.connect(
+        user='NILESHSINHA',
+        password='Hummer$123',
+        account='yhrcdps-ie79268',
+        warehouse='COMPUTE_WH',
+        database='COVID19_EPIDEMIOLOGICAL_DATA',
+        schema='PUBLIC'
+    )
+    cs = ctx.cursor()
+    cs.execute(query)
+    results = cs.fetch_pandas_all()
+    pd_df = pd.DataFrame(results)
+    # while True:
+    #     results = cs.fetchall()
+    #     if not results:
+    #         break
+    #     pd_df = pd.DataFrame(results, columns=cs.description)
+    print(pd_df)
     return pd_df
 
 
@@ -59,15 +67,13 @@ with tab2:
     # Add header and a subheader
     st.header("Calculate case-fatality ratio for a given date")
 
-    session = create_session_object()
-
-    pd_df_analysis = load_data(session, 'SELECT m.COUNTRY_REGION, YEAR,QTR, m.CASES, m.DEATHS, m.DEATHS / m.CASES as CFR FROM (SELECT COUNTRY_REGION, DATE_PART(YEAR,DATE) as YEAR,DATE_PART(QUARTER,DATE) as QTR, AVG(CASES) AS CASES, AVG(DEATHS) AS DEATHS FROM ECDC_GLOBAL GROUP BY COUNTRY_REGION, YEAR,QTR) m WHERE m.CASES > 0')
+    pd_df_analysis = load_data('SELECT m.COUNTRY_REGION, YEAR,QTR, m.CASES, m.DEATHS, m.DEATHS / m.CASES as CFR FROM (SELECT COUNTRY_REGION, DATE_PART(YEAR,DATE) as YEAR,DATE_PART(QUARTER,DATE) as QTR, AVG(CASES) AS CASES, AVG(DEATHS) AS DEATHS FROM ECDC_GLOBAL GROUP BY COUNTRY_REGION, YEAR,QTR) m WHERE m.CASES > 0')
 
     with st.container():
         st.subheader('Results')
         st.dataframe(pd_df_analysis)
         df_aggr = pd_df_analysis.groupby(['COUNTRY_REGION','YEAR','QTR'],as_index=False).sum()
-        sel_country = st.selectbox('**Select country**', df_aggr.COUNTRY_REGION)
+        sel_country = st.selectbox('**Select country**', df_aggr.COUNTRY_REGION.unique())
         sel_Year = st.selectbox('**Select Year**', df_aggr.YEAR.unique())
         sel_QTR = st.selectbox('**Select QTR**', df_aggr.QTR.unique())
         fil_df = df_aggr[(df_aggr.COUNTRY_REGION == sel_country) & (df_aggr.YEAR == sel_Year) & (df_aggr.QTR == sel_QTR)]
@@ -78,3 +84,17 @@ with tab2:
         title = f'Year: {sel_Year}'
         title = f'QTR: {sel_QTR}'
         st.bar_chart(new_df, x ='feature' , y = 'value')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
