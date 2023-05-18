@@ -41,12 +41,6 @@ def load_data(query):
     cs.execute(query)
     results = cs.fetch_pandas_all()
     pd_df = pd.DataFrame(results)
-    # while True:
-    #     results = cs.fetchall()
-    #     if not results:
-    #         break
-    #     pd_df = pd.DataFrame(results, columns=cs.description)
-    print(pd_df)
     return pd_df
 
 
