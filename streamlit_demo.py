@@ -78,17 +78,3 @@ with tab2:
         title = f'Year: {sel_Year}'
         title = f'QTR: {sel_QTR}'
         st.bar_chart(new_df, x ='feature' , y = 'value')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
